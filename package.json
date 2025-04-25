@@ -8,14 +8,7 @@
     "node": ">=20.0.0"
   },
   "type": "module",
-  "main": "./dist/esm/index.mjs",
-  "types": "./dist/dts/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/dts/index.d.ts",
-      "import": "./dist/esm/index.mjs",
-      "require": "./dist/cjs/index.cjs"
-    }
   },
   "scripts": {
     "build": "npm run build:ts && npm run build:dts && npm run build:cjs && npm run build:esm",
