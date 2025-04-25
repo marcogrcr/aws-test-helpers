@@ -13,6 +13,11 @@
       "types": "./dist/dts/lambda/index.d.ts",
       "import": "./dist/esm/lambda/index.mjs",
       "require": "./dist/cjs/lambda/index.cjs"
+    },
+    "./logger": {
+      "types": "./dist/dts/logger/index.d.ts",
+      "import": "./dist/esm/logger/index.mjs",
+      "require": "./dist/cjs/logger/index.cjs"
     }
   },
   "scripts": {
@@ -28,7 +33,8 @@
     "prepare": "husky"
   },
   "peerDependencies": {
-    "@types/aws-lambda": ">= 8.10.38"
+    "@types/aws-lambda": ">= 8.10.38",
+    "@types/node": ">= 20.0.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",
