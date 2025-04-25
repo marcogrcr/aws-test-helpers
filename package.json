@@ -1,0 +1,60 @@
+{
+  "name": "aws-test-helpers",
+  "version": "0.1.0-dev",
+  "description": "Provides helpers for testing AWS functionality",
+  "author": "Marco Gonzalez",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "type": "module",
+  "main": "./dist/esm/index.mjs",
+  "types": "./dist/dts/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/dts/index.d.ts",
+      "import": "./dist/esm/index.mjs",
+      "require": "./dist/cjs/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "npm run build:ts && npm run build:dts && npm run build:cjs && npm run build:esm",
+    "build:dts": "tsc -p tsconfig.dts.json",
+    "build:cjs": "tsup --config tsup.cjs.config.ts",
+    "build:esm": "tsup --config tsup.esm.config.ts",
+    "build:ts": "tsc",
+    "test": "vitest --run",
+    "test:watch": "vitest --no-coverage",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.0",
+    "@commitlint/config-conventional": "^19.8.0",
+    "@eslint/js": "^9.25.1",
+    "@tsconfig/node20": "^20.1.5",
+    "@types/node": "^20.0.0",
+    "@vitest/coverage-v8": "^3.1.2",
+    "esbuild-plugin-file-path-extensions": "^2.1.4",
+    "eslint": "^9.25.1",
+    "eslint-config-prettier": "^10.1.2",
+    "eslint-plugin-prettier": "^5.2.6",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.1",
+    "prettier": "^3.5.3",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.31.0",
+    "vitest": "^3.1.2"
+  },
+  "homepage": "https://github.com/marcogrcr/aws-test-helpers#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marcogrcr/aws-test-helpers.git"
+  },
+  "bugs": {
+    "url": "https://github.com/marcogrcr/aws-test-helpers/issues"
+  }
+}
