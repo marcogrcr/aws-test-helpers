@@ -23,6 +23,11 @@
       "types": "./dist/dts/logger/lambda-powertools-logger.d.ts",
       "import": "./dist/esm/logger/lambda-powertools-logger.mjs",
       "require": "./dist/cjs/logger/lambda-powertools-logger.cjs"
+    },
+    "./sqs": {
+      "types": "./dist/dts/sqs/index.d.ts",
+      "import": "./dist/esm/sqs/index.mjs",
+      "require": "./dist/cjs/sqs/index.cjs"
     }
   },
   "scripts": {
@@ -39,11 +44,14 @@
   },
   "peerDependencies": {
     "@aws-lambda-powertools/logger": "^2.8.0",
+    "@aws-sdk/client-sqs": "^3.181.0",
     "@types/aws-lambda": ">= 8.10.38",
-    "@types/node": ">= 20.0.0"
+    "@types/node": ">= 20.0.0",
+    "fast-equals": "^5.0.0"
   },
   "devDependencies": {
     "@aws-lambda-powertools/logger": "2.8.0",
+    "@aws-sdk/client-sqs": "3.181.0",
     "@commitlint/cli": "^19.8.0",
     "@commitlint/config-conventional": "^19.8.0",
     "@eslint/js": "^9.25.1",
@@ -57,6 +65,7 @@
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-prettier": "^5.2.6",
     "eslint-plugin-simple-import-sort": "^12.1.1",
+    "fast-equals": "5.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.5.1",
     "prettier": "^3.5.3",
