@@ -1,0 +1,27 @@
+# https://docs.localstack.cloud/getting-started/installation/#docker-compose
+services:
+  localstack:
+    container_name: "${LOCALSTACK_DOCKER_NAME:-localstack-main}"
+    image: localstack/localstack:stable
+    ports:
+      - "127.0.0.1:4566:4566" # LocalStack Gateway
+      - "127.0.0.1:4510-4559:4510-4559" # external services port range
+    environment:
+      # LocalStack configuration: https://docs.localstack.cloud/references/configuration/
+      - DEBUG=${DEBUG:-0}
+    volumes:
+      - "${LOCALSTACK_VOLUME_DIR:-./.localstack}:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    healthcheck:
+      # equivalent of: docker inspect localstack/localstack:stable | jq '.[0].Config.Healthcheck'
+      # with the exception indicated below
+      interval: 10s
+      retries: 5
+      start_interval: 1s # we reduce this from every 5s to 1s to speed up startup time
+      start_period: 15s
+      test:
+        [
+          CMD-SHELL,
+          "/opt/code/localstack/.venv/bin/localstack status services --format=json",
+        ]
+      timeout: 10s

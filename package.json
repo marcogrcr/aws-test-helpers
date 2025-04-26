@@ -51,6 +51,7 @@
     "@types/aws-lambda": "8.10.38",
     "@types/node": "^20.0.0",
     "@vitest/coverage-v8": "^3.1.2",
+    "docker-compose": "^1.2.0",
     "esbuild-plugin-file-path-extensions": "^2.1.4",
     "eslint": "^9.25.1",
     "eslint-config-prettier": "^10.1.2",
