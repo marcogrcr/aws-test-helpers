@@ -14,6 +14,11 @@
       "import": "./dist/esm/lambda/index.mjs",
       "require": "./dist/cjs/lambda/index.cjs"
     },
+    "./lambda/sqs": {
+      "types": "./dist/dts/lambda/sqs/index.d.ts",
+      "import": "./dist/esm/lambda/sqs/index.mjs",
+      "require": "./dist/cjs/lambda/sqs/index.cjs"
+    },
     "./logger": {
       "types": "./dist/dts/logger/index.d.ts",
       "import": "./dist/esm/logger/index.mjs",
