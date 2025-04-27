@@ -8,6 +8,9 @@
     "node": ">=20.0.0"
   },
   "type": "module",
+  "bin": {
+    "run-sqs-lambda": "./dist/esm/bin/run-sqs-lambda.mjs"
+  },
   "exports": {
     "./lambda": {
       "types": "./dist/dts/lambda/index.d.ts",
@@ -49,13 +52,20 @@
   },
   "peerDependencies": {
     "@aws-lambda-powertools/logger": "^2.8.0",
+    "@aws-sdk/abort-controller": "^3.178.0",
     "@aws-sdk/client-sqs": "^3.181.0",
     "@types/aws-lambda": ">= 8.10.38",
     "@types/node": ">= 20.0.0",
-    "fast-equals": "^5.0.0"
+    "commander": "^13.0.0",
+    "dotenv": "^16.0.0",
+    "es-main": "^1.2.0",
+    "fast-equals": "^5.0.0",
+    "tsx": "^4.0.0",
+    "zod": "^3.20.0"
   },
   "devDependencies": {
     "@aws-lambda-powertools/logger": "2.8.0",
+    "@aws-sdk/abort-controller": "3.178.0",
     "@aws-sdk/client-sqs": "3.181.0",
     "@commitlint/cli": "^19.8.0",
     "@commitlint/config-conventional": "^19.8.0",
@@ -64,7 +74,10 @@
     "@types/aws-lambda": "8.10.38",
     "@types/node": "^20.0.0",
     "@vitest/coverage-v8": "^3.1.2",
+    "commander": "13.0.0",
     "docker-compose": "^1.2.0",
+    "dotenv": "16.0.0",
+    "es-main": "1.2.0",
     "esbuild-plugin-file-path-extensions": "^2.1.4",
     "eslint": "^9.25.1",
     "eslint-config-prettier": "^10.1.2",
@@ -75,9 +88,11 @@
     "lint-staged": "^15.5.1",
     "prettier": "^3.5.3",
     "tsup": "^8.4.0",
+    "tsx": "4.0.0",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.31.0",
-    "vitest": "^3.1.2"
+    "vitest": "^3.1.2",
+    "zod": "3.20.0"
   },
   "homepage": "https://github.com/marcogrcr/aws-test-helpers#readme",
   "repository": {
