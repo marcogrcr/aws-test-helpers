@@ -15,8 +15,7 @@ import {
   SQSClient,
   type SQSClientResolvedConfig,
 } from "@aws-sdk/client-sqs";
-import type { Command } from "@aws-sdk/smithy-client";
-import type { AbortSignal } from "@aws-sdk/types";
+import type { Command } from "@smithy/smithy-client";
 import { shallowEqual } from "fast-equals";
 
 export interface CleanQueueInput extends QueueInput {
@@ -54,11 +53,11 @@ export interface GetMessagesOutput {
 }
 
 export interface SendInput<
-  InputType extends ServiceInputTypes,
-  OutputType extends ServiceOutputTypes,
+  Input extends ServiceInputTypes,
+  Output extends ServiceOutputTypes,
 > extends BaseInput {
   /** The command. */
-  readonly command: Command<InputType, OutputType, SQSClientResolvedConfig>;
+  readonly command: Command<Input, Output, SQSClientResolvedConfig>;
 }
 
 export interface UpsertQueueInput extends BaseInput {
@@ -219,9 +218,9 @@ export class SqsHelper {
 
   /** A convenience method for sending SQS commands. */
   static async send<
-    InputType extends ServiceInputTypes,
-    OutputType extends ServiceOutputTypes,
-  >(input: SendInput<InputType, OutputType>): Promise<OutputType> {
+    Input extends ServiceInputTypes,
+    Output extends ServiceOutputTypes,
+  >(input: SendInput<Input, Output>): Promise<Output> {
     const { command, endpoint } = input;
     const output = await this.#getClient(endpoint).send(command);
     return output;

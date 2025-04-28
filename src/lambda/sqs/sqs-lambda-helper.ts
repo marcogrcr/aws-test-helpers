@@ -1,5 +1,4 @@
 import { GetQueueUrlCommand, type Message } from "@aws-sdk/client-sqs";
-import type { AbortSignal } from "@aws-sdk/types";
 import type { SQSEvent, SQSHandler } from "aws-lambda";
 
 import { type Logger, NoLogger } from "../../logger";

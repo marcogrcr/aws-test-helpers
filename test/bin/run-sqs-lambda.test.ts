@@ -1,4 +1,3 @@
-import { AbortSignal } from "@aws-sdk/abort-controller";
 import { CommanderError } from "commander";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 

@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 
-import { AbortController } from "@aws-sdk/abort-controller";
 import {
   CreateQueueCommand,
   GetQueueAttributesCommand,

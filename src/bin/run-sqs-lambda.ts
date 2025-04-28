@@ -3,7 +3,6 @@ import "dotenv/config";
 
 import path from "node:path";
 
-import { AbortController } from "@aws-sdk/abort-controller";
 import type { SQSHandler } from "aws-lambda";
 import { InvalidArgumentError, program } from "commander";
 import esMain from "es-main";
