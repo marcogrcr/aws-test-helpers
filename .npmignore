@@ -4,6 +4,7 @@
 .localstack
 .nvmrc
 .vscode
+*.tgz
 coverage
 docker-compose.yml
 eslint.*

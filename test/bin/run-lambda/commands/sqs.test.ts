@@ -1,20 +1,28 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { CommanderError } from "commander";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
-import { runSqsLambda } from "../../src/bin/run-sqs-lambda";
-import { SqsLambdaHelper } from "../../src/lambda/sqs";
-import { modulePath as nonFunctionHandlerModulePath } from "./modules/lambda/non-function";
+import { runLambda } from "../../../../src/bin/run-lambda/cli";
+import { SqsLambdaHelper } from "../../../../src/lambda/sqs";
+import { modulePath as nonFunctionHandlerModulePath } from "../modules/lambda/non-function";
 import {
   handler,
   modulePath as okHandlerModulePath,
-} from "./modules/lambda/ok";
-import { modulePath as nonLoggerModulePath } from "./modules/logger/non-logger";
-import logger, { modulePath as okLoggerModulePath } from "./modules/logger/ok";
+} from "../modules/lambda/ok";
+import { modulePath as nonLoggerModulePath } from "../modules/logger/non-logger";
+import logger, { modulePath as okLoggerModulePath } from "../modules/logger/ok";
 
-vi.mock("../../src/lambda/sqs");
+vi.mock("../../../../src/lambda/sqs");
 
-const ARGV = {
+const BASE_ARGV = {
   node: "module",
+  sqs: "",
+};
+
+const DEFAULT_ARGV = {
+  ...BASE_ARGV,
   "-b": "2",
   "-e": "https://example.com",
   "-h": okHandlerModulePath,
@@ -23,13 +31,21 @@ const ARGV = {
   "-t": "3",
 } as const;
 
-describe("runSqsLambda", () => {
+function toArgs(args: Record<string, string>): readonly string[] {
+  return Object.entries(args)
+    .map(([key, value]) => (value ? [key, value] : [key]))
+    .flat();
+}
+
+function toPath(...components: string[]): string {
+  return path.join(path.dirname(fileURLToPath(import.meta.url)), ...components);
+}
+
+// TODO: unit test the refactored modules independently (e.g. src/bin/run-lambda/util/*)
+describe("run-lambda sqs", () => {
   describe("with no options", () => {
     it("throws error", async () => {
-      const actual = runSqsLambda(
-        Object.entries({ node: "module" }).flat(),
-        true,
-      );
+      const actual = runLambda(toArgs(BASE_ARGV), true);
 
       await expect(actual).rejects.toThrow(CommanderError);
     });
@@ -37,7 +53,7 @@ describe("runSqsLambda", () => {
 
   describe("with options from arguments", () => {
     it("invokes SqsLambdaHelper.runSqsLambda", async () => {
-      await runSqsLambda(Object.entries(ARGV).flat(), true);
+      await runLambda(toArgs(DEFAULT_ARGV), true);
 
       expect(SqsLambdaHelper.runSqsLambda).toHaveBeenCalledWith({
         abortSignal: expect.any(AbortSignal),
@@ -53,11 +69,11 @@ describe("runSqsLambda", () => {
 
   describe("with options from config file", () => {
     it("obtains options from config file", async () => {
-      await runSqsLambda(
-        Object.entries({
-          node: "module",
-          "-c": "test/bin/modules/config/ok.json",
-        }).flat(),
+      await runLambda(
+        toArgs({
+          ...BASE_ARGV,
+          "-c": toPath("config", "ok.json"),
+        }),
         true,
       );
 
@@ -74,11 +90,11 @@ describe("runSqsLambda", () => {
 
     describe("invalid file", () => {
       it("throws error", async () => {
-        const actual = runSqsLambda(
-          Object.entries({
-            node: "module",
-            "-c": "test/bin/modules/config/invalid.json",
-          }).flat(),
+        const actual = runLambda(
+          toArgs({
+            ...BASE_ARGV,
+            "-c": toPath("config", "invalid.json"),
+          }),
           true,
         );
 
@@ -108,16 +124,16 @@ describe("runSqsLambda", () => {
 
     describe("with options from arguments", () => {
       it("reads values from environment variables", async () => {
-        await runSqsLambda(
-          Object.entries({
-            node: "program",
+        await runLambda(
+          toArgs({
+            ...BASE_ARGV,
             "-b": "env:BATCH_SIZE",
             "-e": "env:ENDPOINT",
             "-h": "env:HANDLER",
             "-l": "env:LOGGER",
             "-q": "env:QUEUE_NAME",
             "-t": "env:TIMEOUT",
-          }).flat(),
+          }),
           true,
         );
 
@@ -135,11 +151,11 @@ describe("runSqsLambda", () => {
 
     describe("with options from config file", () => {
       it("reads values from environment variables", async () => {
-        await runSqsLambda(
-          Object.entries({
-            node: "program",
-            "-c": "test/bin/modules/config/env-var.json",
-          }).flat(),
+        await runLambda(
+          toArgs({
+            ...BASE_ARGV,
+            "-c": toPath("config", "env-var.json"),
+          }),
           true,
         );
 
@@ -157,11 +173,11 @@ describe("runSqsLambda", () => {
 
     describe("non-existent environment variable", async () => {
       it("throws error", async () => {
-        const actual = runSqsLambda(
-          Object.entries({
-            ...ARGV,
+        const actual = runLambda(
+          toArgs({
+            ...DEFAULT_ARGV,
             "-b": "env:NON_EXISTENT",
-          }).flat(),
+          }),
           true,
         );
 
@@ -201,11 +217,11 @@ describe("runSqsLambda", () => {
     },
   ])("$testCase", ({ args }) => {
     it("throws error", async () => {
-      const actual = runSqsLambda(
-        Object.entries({
-          ...ARGV,
+      const actual = runLambda(
+        toArgs({
+          ...DEFAULT_ARGV,
           ...args,
-        }).flat(),
+        }),
         true,
       );
 

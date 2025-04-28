@@ -53,9 +53,13 @@ The package also exposes CLI commands. Invoke commands with the `--help` argumen
 
 See [package.json] for all available commands in `bin`.
 
-### Commands
+### run-lambda
 
-`run-sqs-lambda`: Polls an SQS queue and invokes a Lambda handler.
+Invokes a Lambda handler.
+
+#### run-lambda sqs
+
+Polls an SQS queue and invokes a Lambda handler.
 
 For example, given the following Lambda handler:
 
@@ -80,7 +84,7 @@ ENDPOINT='http://127.0.0.1:4566' # localstack
 You can run it locally as follows:
 
 ```sh
-npx run-sqs-lambda \
+npx run-lambda sqs \
 --batch-size '10' \
 --endpoint 'env:ENDPOINT' \ # you can reference .env variables with 'env:XXX'
 --handler 'src/log-messages.ts' \
@@ -90,19 +94,19 @@ npx run-sqs-lambda \
 
 Alternatively, you can specify a `.json` config file:
 
-```json
+```jsonc
 // config/run-sqs-lambda.json
 {
   "batchSize": 10,
   "endpoint": "env:ENDPOINT",
   "handler": "src/log-messages.ts",
   "queueName": "my-queue",
-  "timeout": 30
+  "timeout": 30,
 }
 ```
 
 ```sh
-npx run-sqs-lambda --config-file config/run-sqs-lambda.json
+npx run-lambda sqs --config-file config/run-sqs-lambda.json
 ```
 
 [.env]: https://www.npmjs.com/package/dotenv
