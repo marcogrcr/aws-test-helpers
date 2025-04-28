@@ -1,6 +1,6 @@
 {
   "name": "aws-test-helpers",
-  "version": "0.1.0-dev",
+  "version": "0.1.1",
   "description": "Provides helpers for testing AWS functionality",
   "author": "Marco Gonzalez",
   "license": "MIT",
