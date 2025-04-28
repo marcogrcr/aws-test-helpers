@@ -51,17 +51,19 @@
     "prepack": "rm -rf dist && npm run lint && npm test && npm run build",
     "prepare": "husky"
   },
-  "peerDependencies": {
-    "@aws-lambda-powertools/logger": "^2.8.0",
+  "dependencies": {
     "@aws-sdk/client-sqs": "^3.363.0",
-    "@types/aws-lambda": ">= 8.10.38",
-    "@types/node": ">= 20.0.0",
     "commander": "^13.0.0",
     "dotenv": "^16.0.0",
     "es-main": "^1.2.0",
     "fast-equals": "^5.0.0",
     "tsx": "^4.0.0",
     "zod": "^3.20.0"
+  },
+  "peerDependencies": {
+    "@aws-lambda-powertools/logger": "^2.8.0",
+    "@types/aws-lambda": ">= 8.10.38",
+    "@types/node": ">= 20.0.0"
   },
   "devDependencies": {
     "@aws-lambda-powertools/logger": "2.8.0",
