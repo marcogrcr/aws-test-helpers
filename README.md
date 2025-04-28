@@ -1,2 +1,86 @@
 # aws-test-helpers
-Provides helpers for testing AWS functionality
+
+Provides helpers for testing AWS functionality.
+
+## Getting started
+
+Import the desired helper. For example:
+
+```js
+import { SqsHelper } from "aws-test-helpers/sqs";
+
+const { messages } =
+  (await SqsHelper.getJsonMessages) <
+  { name: string } >
+  {
+    endpoint: "http://127.0.0.1:4566", // localstack
+    queueUrl: "...",
+  };
+
+for (const message of messages) {
+  console.log("Message name:", message.name);
+}
+```
+
+See [package.json] for all available functionality in `exports`.
+
+### Helpers
+
+- `aws-test-helpers/lambda`: Invokes Lambda handlers locally.
+- `aws-test-helpers/lambda/sqs`: Polls an SQS queue and invokes a Lambda handler.
+- `aws-test-helpers/sqs`: Provides various SQS-related methods like upserting a queue, getting messages in batches and
+  automatically parsing messages in JSON format.
+
+### Logging
+
+Some helpers methods accept a `Logger` instance. The following loggers are provided out-of-the-box:
+
+- `aws-test-helpers/logger`:
+  - `NoLogger`: disables logging.
+  - `ConsoleLogger`: logs using the `console`.
+- `logger/lambda-powertools-logger`: Wraps a [@aws-lambda-powertools/logger] logger.
+
+## CLI
+
+The package also exposes CLI commands. Invoke commands with the `--help` argument to learn more.
+
+See [package.json] for all available commands in `bin`.
+
+### Commands
+
+`run-sqs-lambda`: Polls an SQS queue and invokes a Lambda handler.
+
+For example, given the following Lambda handler:
+
+```ts
+// src/log-messages.ts
+import type { SQSHandler } from "aws-lambda";
+
+export const handler: SQSHandler = async (event) => {
+  console.log("Got messages:", event.Messages);
+};
+```
+
+and the following [.env] file:
+
+```ini
+AWS_REGION='us-east-1'
+AWS_ACCESS_KEY_ID='fake'
+AWS_SECRET_ACCESS_KEY='fake'
+ENDPOINT='http://127.0.0.1:4566' # localstack
+```
+
+You can run it locally as follows:
+
+```sh
+npx run-sqs-lambda \
+--batch-size '10' \
+--endpoint 'env:ENDPOINT' \ # you can reference .env variables with 'env:XXX'
+--handler 'src/log-messages.ts' \
+--queue-name 'my-queue' \
+--timeout '30'
+```
+
+[.env]: https://www.npmjs.com/package/dotenv
+[@aws-lambda-powertools/logger]: https://www.npmjs.com/package/@aws-lambda-powertools/logger
+[package.json]: ./package.json
