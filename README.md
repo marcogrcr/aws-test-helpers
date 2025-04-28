@@ -6,19 +6,26 @@ Provides helpers for testing AWS functionality.
 
 Import the desired helper. For example:
 
-```js
+```ts
 import { SqsHelper } from "aws-test-helpers/sqs";
 
-const { messages } =
-  (await SqsHelper.getJsonMessages) <
-  { name: string } >
-  {
-    endpoint: "http://127.0.0.1:4566", // localstack
-    queueUrl: "...",
-  };
+interface Email {
+  readonly from: string;
+  readonly to: string;
+  readonly subject: string;
+  readonly body: string;
+}
 
-for (const message of messages) {
-  console.log("Message name:", message.name);
+const { messages } = await SqsHelper.getJsonMessages<Email>({
+  endpoint: "http://127.0.0.1:4566", // localstack
+  queueUrl: "...",
+});
+
+for (const { Object: email } of messages) {
+  console.info("Subject:", email.subject);
+  console.info("From:", email.from);
+  console.info("To:", email.to);
+  console.info(email.body);
 }
 ```
 
