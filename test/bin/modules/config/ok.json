@@ -1,0 +1,8 @@
+{
+  "batchSize": 2,
+  "endpoint": "https://example.com",
+  "handlerModule": "test/bin/modules/lambda/ok.ts",
+  "loggerModule": "test/bin/modules/logger/ok.ts",
+  "queueName": "queue-name",
+  "timeout": 3
+}

@@ -88,6 +88,23 @@ npx run-sqs-lambda \
 --timeout '30'
 ```
 
+Alternatively, you can specify a `.json` config file:
+
+```json
+// config/run-sqs-lambda.json
+{
+  "batchSize": 10,
+  "endpoint": "env:ENDPOINT",
+  "handler": "src/log-messages.ts",
+  "queueName": "my-queue",
+  "timeout": 30
+}
+```
+
+```sh
+npx run-sqs-lambda --config-file config/run-sqs-lambda.json
+```
+
 [.env]: https://www.npmjs.com/package/dotenv
 [@aws-lambda-powertools/logger]: https://www.npmjs.com/package/@aws-lambda-powertools/logger
 [package.json]: ./package.json

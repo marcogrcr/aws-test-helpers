@@ -1,27 +1,68 @@
 #!/usr/bin/env tsx
 import "dotenv/config";
 
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { SQSHandler } from "aws-lambda";
-import { InvalidArgumentError, program } from "commander";
+import { InvalidArgumentError, Option, program } from "commander";
 import esMain from "es-main";
-import { z } from "zod";
+import { z, type ZodType } from "zod";
 
 import { SqsLambdaHelper } from "../lambda/sqs";
 import { ConsoleLogger, type Logger } from "../logger";
 
-interface Options {
-  readonly batchSize: number;
-  readonly endpoint: string;
-  readonly handlerModule: string;
-  readonly loggerModule?: string;
-  readonly queueName: string;
-  readonly timeout: number;
-}
+const BATCH_SIZE_OPTION = "-b, --batch-size <number>";
+const CONFIG_OPTION = "-c, --config-file <config-file>";
+const ENDPOINT_OPTION = "-e, --endpoint <url>";
+const HANDLER_MODULE_OPTION = "-h, --handler-module <module-path>";
+const LOGGER_MODULE_OPTION = "-l, --logger-module [module-path]";
+const QUEUE_NAME_OPTION = "-q, --queue-name <name>";
+const TIMEOUT_OPTION = "-t, --timeout <seconds>";
 
-const HANDLER_OPTION = "-h, --handler-module <module-path>";
-const LOGGER_OPTION = "-l, --logger-module <module-path>";
+const INTEGER_STRING = z.string().regex(/^\d+$/);
+const POSITIVE_INTEGER = z.number().int().min(1);
+const OPTIONS_SCHEMA = z
+  .object({
+    batchSize: z.union([
+      z
+        .union([
+          z.string().transform((v) => resolveOptionValue(BATCH_SIZE_OPTION, v)),
+          INTEGER_STRING,
+        ])
+        .transform((v) => parseInt(v))
+        .pipe(POSITIVE_INTEGER),
+      POSITIVE_INTEGER,
+    ]),
+    endpoint: z
+      .string()
+      .transform((v) => resolveOptionValue(BATCH_SIZE_OPTION, v))
+      .pipe(z.string().url()),
+    handlerModule: z
+      .string()
+      .transform((v) => resolveOptionValue(HANDLER_MODULE_OPTION, v)),
+    loggerModule: z
+      .string()
+      .transform((v) => resolveOptionValue(LOGGER_MODULE_OPTION, v))
+      .optional(),
+    queueName: z
+      .string()
+      .transform((v) => resolveOptionValue(QUEUE_NAME_OPTION, v)),
+    timeout: z.union([
+      z
+        .union([
+          z.string().transform((v) => resolveOptionValue(TIMEOUT_OPTION, v)),
+          INTEGER_STRING,
+        ])
+        .transform((v) => parseInt(v))
+        .pipe(POSITIVE_INTEGER),
+      POSITIVE_INTEGER,
+    ]),
+  })
+  .strict();
+
+type Options = z.infer<typeof OPTIONS_SCHEMA>;
+type RawOptions = Options | { readonly configFile: string };
 
 // configure program
 program
@@ -31,61 +72,65 @@ program
     "after",
     'Add "env:" prefix to any option value to read it from an environment variable (.env files are supported). For example -q env:QUEUE_NAME',
   )
-  .requiredOption(
-    "-b, --batch-size <number>",
-    "The SQS message batch size.",
-    (v) => {
-      const r = z
-        .string()
-        .regex(/^\d+$/)
-        .transform((v) => parseInt(v))
-        .pipe(z.number().int().min(1))
-        .safeParse(resolveOptionValue(v));
-      if (!r.success) {
-        throw new InvalidArgumentError(
+  .addOption(
+    new Option(BATCH_SIZE_OPTION, "The SQS message batch size.")
+      .conflicts("config")
+      .argParser((v) =>
+        argParser(
+          v,
+          OPTIONS_SCHEMA.shape.batchSize,
           "The batch size must be an integer greater or equal to 1.",
-        );
-      }
-      return r.data;
-    },
+        ),
+      ),
   )
-  .requiredOption("-e, --endpoint <url>", "The SQS endpoint", (v) => {
-    const r = z.string().url().safeParse(resolveOptionValue(v));
-    if (!r.success) {
-      throw new InvalidArgumentError("The endpoint must be a URL.");
-    }
-    return r.data;
-  })
-  .requiredOption(
-    HANDLER_OPTION,
-    "The path to the module that contains the Lambda handler. It must export a function named 'handler'.",
-    (v) => resolveOptionValue(v),
+  .addOption(
+    new Option(ENDPOINT_OPTION, "The SQS endpoint")
+      .conflicts("config")
+      .argParser((v) =>
+        argParser(
+          v,
+          OPTIONS_SCHEMA.shape.endpoint,
+          "The endpoint must be a URL.",
+        ),
+      ),
   )
-  .option(
-    LOGGER_OPTION,
-    "The path to the module that contains a Logger. It must be the default export.",
-    (v) => resolveOptionValue(v),
+  .addOption(
+    new Option(
+      HANDLER_MODULE_OPTION,
+      "The path to the module that contains the Lambda handler. It must export a function named 'handler'.",
+    )
+      .conflicts("config")
+      .argParser((v) => argParser(v, OPTIONS_SCHEMA.shape.handlerModule)),
   )
-  .requiredOption("-q, --queue-name <name>", "The SQS queue name.", (v) =>
-    resolveOptionValue(v),
+  .addOption(
+    new Option(
+      LOGGER_MODULE_OPTION,
+      "The path to the module that contains a Logger. It must be the default export.",
+    )
+      .conflicts("config")
+      .argParser((v) => argParser(v, OPTIONS_SCHEMA.shape.loggerModule)),
   )
-  .requiredOption(
-    "-t, --timeout <seconds>",
-    "The Lambda function timeout in seconds.",
-    (v) => {
-      const r = z
-        .string()
-        .regex(/^\d+$/)
-        .transform((v) => parseInt(v))
-        .pipe(z.number().int().min(1))
-        .safeParse(resolveOptionValue(v));
-      if (!r.success) {
-        throw new InvalidArgumentError(
+  .addOption(
+    new Option(QUEUE_NAME_OPTION, "The SQS queue name.")
+      .conflicts("config")
+      .argParser((v) => argParser(v, OPTIONS_SCHEMA.shape.queueName)),
+  )
+  .addOption(
+    new Option(TIMEOUT_OPTION, "The Lambda function timeout in seconds.")
+      .conflicts("config")
+      .argParser((v) =>
+        argParser(
+          v,
+          OPTIONS_SCHEMA.shape.timeout,
           "The timeout must be an integer greater or equal to 1.",
-        );
-      }
-      return r.data;
-    },
+        ),
+      ),
+  )
+  .addOption(
+    new Option(
+      CONFIG_OPTION,
+      "A JSON configuration file with the option values.",
+    ).argParser((v) => resolveOptionValue(CONFIG_OPTION, v)),
   )
   .showHelpAfterError();
 
@@ -105,25 +150,51 @@ export async function runSqsLambda(
   }
 
   // parse arguments
-  const options: Options = program.parse(argv).opts();
+  let options: Options;
+  const rawOptions: RawOptions = program.parse(argv).opts();
+  if ("configFile" in rawOptions) {
+    const config = await loadModule(
+      CONFIG_OPTION,
+      rawOptions.configFile,
+      "json",
+    );
+    const r = OPTIONS_SCHEMA.safeParse(config);
+    if (!r.success) {
+      program.error(
+        `error: option '${CONFIG_OPTION}' argument '${rawOptions.configFile}' is invalid. ${r.error}`,
+      );
+    }
+    options = r.data;
+  } else {
+    const r = OPTIONS_SCHEMA.safeParse(rawOptions);
+    if (!r.success) {
+      program.error(
+        `error: you must specify ${CONFIG_OPTION} or all the required options.`,
+      );
+    }
+    options = r.data;
+  }
 
   // dynamically load logger
   let logger: Logger = new ConsoleLogger();
   if (options.loggerModule) {
-    const module = await loadModule(LOGGER_OPTION, options.loggerModule);
+    const module = await loadModule(LOGGER_MODULE_OPTION, options.loggerModule);
     if (!isLogger(module.default)) {
       program.error(
-        `error: option: '${LOGGER_OPTION}' argument '${options.loggerModule}' is invalid. The module default export is not a Logger instance.`,
+        `error: option: '${LOGGER_MODULE_OPTION}' argument '${options.loggerModule}' is invalid. The module default export is not a Logger instance.`,
       );
     }
     logger = module.default;
   }
 
   // dynamically load Lambda handler
-  const { handler } = await loadModule(HANDLER_OPTION, options.handlerModule);
+  const { handler } = await loadModule(
+    HANDLER_MODULE_OPTION,
+    options.handlerModule,
+  );
   if (typeof handler !== "function") {
     program.error(
-      `error: option '${HANDLER_OPTION}' argument '${options.handlerModule}' is invalid. The module does not export a function named 'handler'.`,
+      `error: option '${HANDLER_MODULE_OPTION}' argument '${options.handlerModule}' is invalid. The module does not export a function named 'handler'.`,
     );
   }
 
@@ -154,12 +225,25 @@ export async function runSqsLambda(
   logger.info("Finished polling SQS queue.");
 }
 
+function argParser(value: unknown, schema: ZodType, errorMsg?: string) {
+  const result = schema.safeParse(value);
+  if (!result.success) {
+    throw new InvalidArgumentError(errorMsg ?? result.error.message);
+  }
+
+  return result.data;
+}
+
 async function loadModule(
   option: string,
   modulePath: string,
+  type: "import" | "json" = "import",
 ): Promise<Record<string, unknown>> {
   try {
-    return await import(path.resolve(modulePath));
+    const resolvedPath = path.resolve(modulePath);
+    return type === "import"
+      ? await import(resolvedPath)
+      : JSON.parse((await readFile(resolvedPath)).toString());
   } catch (error) {
     program.error(
       `error: option '${option}' argument '${modulePath}' is invalid. ${error}`,
@@ -183,7 +267,7 @@ function isLogger(value: unknown): value is Logger {
   );
 }
 
-function resolveOptionValue(value: string): string {
+function resolveOptionValue(option: string, value: string): string {
   if (!value.startsWith("env:")) {
     return value;
   }
@@ -191,8 +275,8 @@ function resolveOptionValue(value: string): string {
   const varName = value.substring(4);
   const result = process.env[varName];
   if (!result) {
-    throw new InvalidArgumentError(
-      `No environment variable found with name '${varName}'.`,
+    program.error(
+      `error: option '${option}' argument '${value}' is invalid. No environment variable found with name '${varName}'.`,
     );
   }
 

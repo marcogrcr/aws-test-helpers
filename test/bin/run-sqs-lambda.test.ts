@@ -24,21 +24,70 @@ const ARGV = {
 } as const;
 
 describe("runSqsLambda", () => {
-  it("invokes SqsLambdaHelper.runSqsLambda", async () => {
-    await runSqsLambda(Object.entries(ARGV).flat(), true);
+  describe("with no options", () => {
+    it("throws error", async () => {
+      const actual = runSqsLambda(
+        Object.entries({ node: "module" }).flat(),
+        true,
+      );
 
-    expect(SqsLambdaHelper.runSqsLambda).toHaveBeenCalledWith({
-      abortSignal: expect.any(AbortSignal),
-      batchSize: 2,
-      endpoint: "https://example.com",
-      handler,
-      logger,
-      queue: { name: "queue-name" },
-      timeout: 3,
+      await expect(actual).rejects.toThrow(CommanderError);
     });
   });
 
-  describe("environment variables", () => {
+  describe("with options from arguments", () => {
+    it("invokes SqsLambdaHelper.runSqsLambda", async () => {
+      await runSqsLambda(Object.entries(ARGV).flat(), true);
+
+      expect(SqsLambdaHelper.runSqsLambda).toHaveBeenCalledWith({
+        abortSignal: expect.any(AbortSignal),
+        batchSize: 2,
+        endpoint: "https://example.com",
+        handler,
+        logger,
+        queue: { name: "queue-name" },
+        timeout: 3,
+      });
+    });
+  });
+
+  describe("with options from config file", () => {
+    it("obtains options from config file", async () => {
+      await runSqsLambda(
+        Object.entries({
+          node: "module",
+          "-c": "test/bin/modules/config/ok.json",
+        }).flat(),
+        true,
+      );
+
+      expect(SqsLambdaHelper.runSqsLambda).toHaveBeenCalledWith({
+        abortSignal: expect.any(AbortSignal),
+        batchSize: 2,
+        endpoint: "https://example.com",
+        handler,
+        logger,
+        queue: { name: "queue-name" },
+        timeout: 3,
+      });
+    });
+
+    describe("invalid file", () => {
+      it("throws error", async () => {
+        const actual = runSqsLambda(
+          Object.entries({
+            node: "module",
+            "-c": "test/bin/modules/config/invalid.json",
+          }).flat(),
+          true,
+        );
+
+        await expect(actual).rejects.toThrow(CommanderError);
+      });
+    });
+  });
+
+  describe("with environment variables", () => {
     let tmp: NodeJS.ProcessEnv;
     beforeAll(() => {
       tmp = process.env;
@@ -57,28 +106,52 @@ describe("runSqsLambda", () => {
       process.env = tmp;
     });
 
-    it("reads values from environment variables", async () => {
-      await runSqsLambda(
-        Object.entries({
-          node: "program",
-          "-b": "env:BATCH_SIZE",
-          "-e": "env:ENDPOINT",
-          "-h": "env:HANDLER",
-          "-l": "env:LOGGER",
-          "-q": "env:QUEUE_NAME",
-          "-t": "env:TIMEOUT",
-        }).flat(),
-        true,
-      );
+    describe("with options from arguments", () => {
+      it("reads values from environment variables", async () => {
+        await runSqsLambda(
+          Object.entries({
+            node: "program",
+            "-b": "env:BATCH_SIZE",
+            "-e": "env:ENDPOINT",
+            "-h": "env:HANDLER",
+            "-l": "env:LOGGER",
+            "-q": "env:QUEUE_NAME",
+            "-t": "env:TIMEOUT",
+          }).flat(),
+          true,
+        );
 
-      expect(SqsLambdaHelper.runSqsLambda).toHaveBeenCalledWith({
-        abortSignal: expect.any(AbortSignal),
-        batchSize: 3,
-        endpoint: "http://localhost",
-        handler,
-        logger,
-        queue: { name: "other-queue" },
-        timeout: 4,
+        expect(SqsLambdaHelper.runSqsLambda).toHaveBeenCalledWith({
+          abortSignal: expect.any(AbortSignal),
+          batchSize: 3,
+          endpoint: "http://localhost",
+          handler,
+          logger,
+          queue: { name: "other-queue" },
+          timeout: 4,
+        });
+      });
+    });
+
+    describe("with options from config file", () => {
+      it("reads values from environment variables", async () => {
+        await runSqsLambda(
+          Object.entries({
+            node: "program",
+            "-c": "test/bin/modules/config/env-var.json",
+          }).flat(),
+          true,
+        );
+
+        expect(SqsLambdaHelper.runSqsLambda).toHaveBeenCalledWith({
+          abortSignal: expect.any(AbortSignal),
+          batchSize: 3,
+          endpoint: "http://localhost",
+          handler,
+          logger,
+          queue: { name: "other-queue" },
+          timeout: 4,
+        });
       });
     });
 

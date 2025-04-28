@@ -1,0 +1,8 @@
+{
+  "batchSize": "env:BATCH_SIZE",
+  "endpoint": "env:ENDPOINT",
+  "handlerModule": "env:HANDLER",
+  "loggerModule": "env:LOGGER",
+  "queueName": "env:QUEUE_NAME",
+  "timeout": "env:TIMEOUT"
+}
