@@ -48,6 +48,7 @@
     "test:watch": "vitest --no-coverage",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
+    "prepack": "rm -rf dist && npm run lint && npm test && npm run build",
     "prepare": "husky"
   },
   "peerDependencies": {

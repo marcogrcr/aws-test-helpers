@@ -1,0 +1,13 @@
+.commitlintrc.*
+.husky
+.lintstagedrc.*
+.localstack
+.nvmrc
+.vscode
+coverage
+docker-compose.yml
+eslint.*
+test
+tsconfig.*
+tsup.*
+vitest.*
