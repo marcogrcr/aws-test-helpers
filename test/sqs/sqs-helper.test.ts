@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { hash, randomUUID } from "node:crypto";
 
 import {
   CreateQueueCommand,
@@ -129,11 +129,20 @@ describe("SQSHelper", () => {
       expect(first.messages).toHaveLength(3);
       expect(first).toStrictEqual({
         messages: expect.arrayContaining(
-          Array.from({ length: 3 }).map((_, id) =>
-            expect.objectContaining({
-              Body: id.toString(),
-            }),
-          ),
+          Array.from({ length: 3 }).map((_, id) => ({
+            Attributes: {
+              ApproximateFirstReceiveTimestamp: expect.stringMatching(/\d+/),
+              ApproximateReceiveCount: "1",
+              SenderId: expect.stringMatching(/^\d{12}$/),
+              SentTimestamp: expect.stringMatching(/\d+/),
+            },
+            Body: id.toString(),
+            MD5OfBody: hash("md5", id.toString(), "hex"),
+            MessageId: expect.stringMatching(
+              /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/,
+            ),
+            ReceiptHandle: expect.any(String),
+          })),
         ),
       });
 

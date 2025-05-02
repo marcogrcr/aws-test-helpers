@@ -5,7 +5,7 @@ import {
   DeleteQueueCommand,
   SendMessageCommand,
 } from "@aws-sdk/client-sqs";
-import type { SQSHandler } from "aws-lambda";
+import type { SQSEvent, SQSHandler, SQSRecordAttributes } from "aws-lambda";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SqsLambdaHelper } from "../../../src/lambda/sqs/sqs-lambda-helper";
@@ -133,7 +133,17 @@ describe("SqsLambdaHelper", () => {
         messages: [
           {
             Attributes: {
-              foo: "bar",
+              AWSTraceHeader: "aws-trace-header",
+              All: "all",
+              ApproximateFirstReceiveTimestamp:
+                "approximate-first-receive-timestamp",
+              ApproximateReceiveCount: "approximate-receive-count",
+              DeadLetterQueueSourceArn: "dead-letter-queue-source-arn",
+              MessageDeduplicationId: "message-deduplication-id",
+              MessageGroupId: "message-group-id",
+              SenderId: "sender-it",
+              SentTimestamp: "sent-timestamp",
+              SequenceNumber: "sequence-number",
             },
             Body: "body",
             MD5OfBody: "body-md5",
@@ -164,40 +174,51 @@ describe("SqsLambdaHelper", () => {
         region: "region",
       });
 
-      expect(actual).toStrictEqual({
-        event: {
-          Records: [
-            {
-              attributes: { foo: "bar" },
-              awsRegion: "region",
-              eventSource: "aws:sqs",
-              eventSourceARN: "arn:aws:sqs:region:account:queue-name",
-              body: "body",
-              md5OfBody: "body-md5",
-              messageAttributes: {
-                binaryListValues: expect.objectContaining({
-                  binaryListValues: ["YmluYXJ5", "bGlzdA=="],
-                  dataType: "Binary",
-                }),
-                binaryValue: expect.objectContaining({
-                  dataType: "Binary",
-                  binaryValue: "YmluYXJ5",
-                }),
-                stringListValues: expect.objectContaining({
-                  dataType: "String",
-                  stringListValues: ["string", "list"],
-                }),
-                stringValue: expect.objectContaining({
-                  dataType: "String",
-                  stringValue: "string",
-                }),
-              },
-              messageId: "message-id",
-              receiptHandle: "receipt-handle",
+      const event: SQSEvent = {
+        Records: [
+          {
+            attributes: {
+              AWSTraceHeader: "aws-trace-header",
+              All: "all",
+              ApproximateFirstReceiveTimestamp:
+                "approximate-first-receive-timestamp",
+              ApproximateReceiveCount: "approximate-receive-count",
+              DeadLetterQueueSourceArn: "dead-letter-queue-source-arn",
+              MessageDeduplicationId: "message-deduplication-id",
+              MessageGroupId: "message-group-id",
+              SenderId: "sender-it",
+              SentTimestamp: "sent-timestamp",
+              SequenceNumber: "sequence-number",
+            } as unknown as SQSRecordAttributes,
+            awsRegion: "region",
+            eventSource: "aws:sqs",
+            eventSourceARN: "arn:aws:sqs:region:account:queue-name",
+            body: "body",
+            md5OfBody: "body-md5",
+            messageAttributes: {
+              binaryListValues: expect.objectContaining({
+                binaryListValues: ["YmluYXJ5", "bGlzdA=="],
+                dataType: "Binary",
+              }),
+              binaryValue: expect.objectContaining({
+                dataType: "Binary",
+                binaryValue: "YmluYXJ5",
+              }),
+              stringListValues: expect.objectContaining({
+                dataType: "String",
+                stringListValues: ["string", "list"],
+              }),
+              stringValue: expect.objectContaining({
+                dataType: "String",
+                stringValue: "string",
+              }),
             },
-          ],
-        },
-      });
+            messageId: "message-id",
+            receiptHandle: "receipt-handle",
+          },
+        ],
+      };
+      expect(actual).toStrictEqual({ event });
     });
   });
 });

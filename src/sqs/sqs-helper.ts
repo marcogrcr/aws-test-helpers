@@ -139,6 +139,7 @@ export class SqsHelper {
             batchSize === undefined
               ? 10
               : Math.min(10, batchSize - messages.length),
+          MessageSystemAttributeNames: ["All"],
           QueueUrl: queueUrl,
           // make polled messages immediately available for polling again
           VisibilityTimeout: 0,
